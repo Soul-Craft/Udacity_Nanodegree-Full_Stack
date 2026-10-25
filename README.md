@@ -92,7 +92,7 @@ hile there are many online resources about programming, not all of the them are 
 
 ### Running the projects
 
-Every project runs on Python 3.15 (`.python-version`).
+Every project runs on Python 3.15.
 
 * **Local and Vagrant projects:** `pip install -r requirements.txt` at the top covers them. The Vagrantfiles build an
   Ubuntu 26.04 VM with Python 3.15 and PostgreSQL.
