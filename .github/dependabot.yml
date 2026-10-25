@@ -1,0 +1,39 @@
+# Always the newest: each ecosystem is checked daily. CI's dependabot-merge job merges every update once CI passes.
+version: 2
+updates:
+  # The root requirements.txt covers the local and Vagrant projects; each App Engine app has its own beside its
+  # app.yaml. Minor and patch bumps arrive together in one pull request; each major comes on its own, as one pull
+  # request for every folder it appears in.
+  - package-ecosystem: pip
+    directories:
+      - /
+      - /ASCII
+      - /Blog
+      - /Encryption
+      - /Fizz_Buzz
+      - /Guestbook
+      - /Guestbook/e2e
+      - /My_Travel_Plans
+      - /Personal_Website
+      - /Project_Compass
+      - /Resume
+      - /Search
+      - /Shopping_List
+      - /Signup
+    schedule:
+      interval: daily
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+      major:
+        update-types: [major]
+        group-by: dependency-name
+
+  # Actions are pinned to full commit SHAs (the version is the comment beside each); all bumps in one pull request.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      actions:
+        patterns: ["*"]

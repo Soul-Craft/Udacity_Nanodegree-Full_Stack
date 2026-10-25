@@ -5,6 +5,7 @@ FROM AN API ENDPOINT
 """
 
 # Import Flask
+import os
 from flask import Flask
 
 app = Flask(__name__)
@@ -35,4 +36,5 @@ def deleteRequestHello():
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host='0.0.0.0', port=5000)	
+    # PORT wins; locally the default is 3100, the first port of soulcraft's dev block (5000 is AirPlay's on a Mac).
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 3100)))	

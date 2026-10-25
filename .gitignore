@@ -28,3 +28,7 @@ Shopping_List/shopping_list.pyc
 Signup/signup.pyc
 Logs_Analysis/database_setup.sql
 Logs_Analysis/ubuntu-xenial-16.04-cloudimg-console.log
+# Python bytecode and local virtualenvs, everywhere
+__pycache__/
+*.py[cod]
+.venv/

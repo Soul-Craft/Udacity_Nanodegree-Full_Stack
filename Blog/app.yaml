@@ -1,6 +1,8 @@
-runtime: python27
-api_version: 1
-threadsafe: true
+# Python 3.14 is App Engine's newest Python runtime (CI tests on 3.15).
+runtime: python314
+entrypoint: gunicorn -b :$PORT blog:app
+# Bundled services (datastore, users) through appengine-python-standard.
+app_engine_apis: true
 
 handlers:
 - url: /img
@@ -8,8 +10,4 @@ handlers:
 - url: /stylesheets
   static_dir: stylesheets
 - url: /.*
-  script: blog.app
-
-libraries:
-- name: jinja2
-  version: latest
+  script: auto

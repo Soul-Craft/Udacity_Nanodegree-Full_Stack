@@ -1,11 +1,14 @@
 import httplib2
 import json
+import os
 import sys
 
+DEFAULT = 'http://localhost:{}'.format(os.environ.get('PORT', 3100))
+
 print("Running Endpoint Tester....\n")
-address = input("Please enter the address of the server you want to access, \n If left blank the connection will be set to 'http://localhost:5000':   ")
+address = input("Please enter the address of the server you want to access, \n If left blank the connection will be set to '" + DEFAULT + "':   ")
 if address == '':
-	address = 'http://localhost:5000'
+	address = DEFAULT
 
 #Making a POST Request
 print("Making a POST request to /puppies...")
@@ -21,7 +24,7 @@ try:
 except Exception as err:
 	print("Test 1 FAILED: Could not make POST Request to web server")
 	print(err.args)
-	sys.exit()
+	sys.exit(1)
 else:
 	print("Test 1 PASS: Succesfully Made POST Request to /puppies")
 
@@ -39,7 +42,7 @@ try:
 except Exception as err:
 	print("Test 2 FAILED: Could not make GET Request to web server")
 	print(err.args)
-	sys.exit()
+	sys.exit(1)
 else:
 	print("Test 2 PASS: Succesfully Made GET Request to /puppies")
 
@@ -61,7 +64,7 @@ try:
 except Exception as err:
 	print("Test 3 FAILED: Could not make GET Requests to web server")
 	print(err.args)
-	sys.exit()
+	sys.exit(1)
 else:
 	print("Test 3 PASS: Succesfully Made GET Request to /puppies/id")
 
@@ -82,7 +85,7 @@ try:
 except Exception as err:
 	print("Test 4 FAILED: Could not make PUT Request to web server")
 	print(err.args)
-	sys.exit()
+	sys.exit(1)
 else:
 	print("Test 4 PASS: Succesfully Made PUT Request to /puppies/id")
 
@@ -103,7 +106,7 @@ try:
 except Exception as err:
 	print("Test 5 FAILED: Could not make DELETE Requests to web server")
 	print(err.args)
-	sys.exit()
+	sys.exit(1)
 else:
 	print("Test 5 PASS: Succesfully Made DELETE Request to /puppies/id")
 	print("ALL TESTS PASSED!!")

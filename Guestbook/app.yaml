@@ -1,6 +1,8 @@
-runtime: python27
-api_version: 1
-threadsafe: true
+# Python 3.14 is App Engine's newest Python runtime (CI tests on 3.15).
+runtime: python314
+entrypoint: gunicorn -b :$PORT guestbook:app
+# Bundled services (datastore, users) through appengine-python-standard.
+app_engine_apis: true
 
 # [START handlers]
 handlers:
@@ -12,13 +14,5 @@ handlers:
   static_dir: bootstrap
 
 - url: /.*
-  script: guestbook.app
+  script: auto
 # [END handlers]
-
-# [START libraries]
-libraries:
-- name: webapp2
-  version: latest
-- name: jinja2
-  version: latest
-# [END libraries]

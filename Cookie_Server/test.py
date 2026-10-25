@@ -1,28 +1,31 @@
 # Test script for the Cookie server.
 #
-# The server should be listening on port 8000, answer a GET request with
+# The server should be listening on port $PORT (default 3100), answer a GET request with
 # an HTML document, answer a POST request by setting a cookie and issuing
 # a redirect.
 
-import requests, random, socket
+import os, requests, random, socket, sys
+
+PORT = int(os.environ.get('PORT', 3100))
+BASE = 'http://localhost:{}/'.format(PORT)
 
 def test_connect():
     '''Try connecting to the server.'''
     print("Testing connecting to the server.")
     try:
         with socket.socket() as s:
-           s.connect(("localhost", 8000))
+           s.connect(("localhost", PORT))
         print("Connection attempt succeeded.")
         return None
     except socket.error:
-        return "Server didn't answer on localhost port 8000.  Is it running?"
+        return "Server didn't answer on localhost port {}.  Is it running?".format(PORT)
 
 def test_POST_cookie():
     '''The server should accept a POST and return a 303 to / with a cookie.'''
     print("Testing POST request, looking for redirect & cookie.")
 
     name = random.choice(["Alice", "Bob", "Charlie", "Debra"])
-    uri = "http://localhost:8000/"
+    uri = BASE
     try:
         r = requests.post(uri, data = {'yourname': name}, allow_redirects=False)
     except requests.RequestException as e:
@@ -50,7 +53,7 @@ def test_POST_cookie():
 def test_GET_plain():
     '''The server should accept a GET and return the form.'''
     print("Testing GET request.")
-    uri = "http://localhost:8000/"
+    uri = BASE
     try:
         r = requests.get(uri)
     except requests.RequestException as e:
@@ -75,7 +78,7 @@ def test_GET_plain():
 def test_GET_cookie():
     '''The server should accept a GET with a cookie on and return the name.'''
     print("Testing GET request with cookie.")
-    uri = "http://localhost:8000/"
+    uri = BASE
     name = random.choice(["Alice", "Bob", "Carla", "David"])
     jar = requests.cookies.RequestsCookieJar()
     jar.set('yourname', name)
@@ -107,5 +110,6 @@ if __name__ == '__main__':
         if problem is not None:
             print(problem)
             break
-    if not problem:
-        print("All tests succeeded!")
+    if problem:
+        sys.exit(1)
+    print("All tests succeeded!")
