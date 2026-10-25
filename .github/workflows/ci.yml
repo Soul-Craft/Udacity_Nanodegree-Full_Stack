@@ -89,13 +89,14 @@ jobs:
         run: |
           psql -q -d postgres -f Bug_Management/database_setup.sql
           (cd Bug_Management && python bug_management.py)
+      # bleach keeps safe tags such as <b> and escapes the rest, so a <script> must come back escaped.
       - name: Forum posts and reads back a message
         run: |
           psql -q -d postgres -f Forum/database_setup.sql
           (cd Forum && exec python forum.py) &
           for _ in $(seq 40); do nc -z localhost 3100 && break; sleep 0.25; done
-          test "$(curl -sS -o /dev/null -w '%{http_code}' --data-urlencode 'content=<b>hello</b> from CI' localhost:3100/post)" = 302
-          curl -fsS localhost:3100/ | grep -F '&lt;b&gt;hello&lt;/b&gt; from CI'
+          test "$(curl -sS -o /dev/null -w '%{http_code}' --data-urlencode 'content=<script>x</script> hello from CI' localhost:3100/post)" = 302
+          curl -fsS localhost:3100/ | grep -F '&lt;script&gt;x&lt;/script&gt; hello from CI'
 
   # Owner, 2026-10-25: every Dependabot update merges once all other jobs pass, majors too.
   dependabot-merge:
