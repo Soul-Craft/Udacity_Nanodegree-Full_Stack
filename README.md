@@ -90,6 +90,25 @@ hile there are many online resources about programming, not all of the them are 
 
 
 
+### Running the projects
+
+Every project runs on Python 3.15 (`.python-version`).
+
+* **Local and Vagrant projects:** `pip install -r requirements.txt` at the top covers them. The Vagrantfiles build an
+  Ubuntu 26.04 VM with Python 3.15 and PostgreSQL.
+* **App Engine apps** (ASCII, Blog, Encryption, Fizz_Buzz, Guestbook, My_Travel_Plans, Personal_Website,
+  Project_Compass, Resume, Search, Shopping_List, Signup): Flask on the `python314` runtime, App Engine's newest. Each
+  has its own `requirements.txt`; deploy one with `gcloud app deploy` from its folder. Locally:
+  `flask --app personal run --port 3100`.
+* **Ports:** servers listen on `$PORT`, 3100 by default.
+* **CI** runs on every push and pull request:
+  * compiles everything;
+  * smoke-tests the App Engine apps;
+  * runs the HTTP servers against their test scripts and the SQLite scripts;
+  * runs Tournament, Bug_Management and Forum against PostgreSQL.
+* **Dependabot** keeps the packages and actions current.
+
+
 ### Authors
 
 * **[Paul Foley](https://github.com/paulfoley)**

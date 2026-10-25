@@ -1,5 +1,6 @@
 '''Message Board Built From Scrtatch'''
 
+import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 
@@ -55,6 +56,7 @@ class MessageHandler(BaseHTTPRequestHandler):
         self.wfile.write(mesg.encode())
 
 if __name__ == '__main__':
-    server_address = ('', 8000)
+    # PORT wins; locally the default is 3100, the first port of soulcraft's dev block.
+    server_address = ('', int(os.environ.get('PORT', 3100)))
     httpd = HTTPServer(server_address, MessageHandler)
     httpd.serve_forever()

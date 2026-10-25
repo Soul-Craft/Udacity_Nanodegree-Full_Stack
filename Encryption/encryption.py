@@ -1,30 +1,26 @@
+import codecs
 import os
 import jinja2
-import webapp2
+from flask import Flask, request
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
 
-class Handler(webapp2.RequestHandler):
-	def write(self, *a, **kw):
-		self.response.out.write(*a, **kw)
+def render_str(template, **params):
+    t = jinja_env.get_template(template)
+    return t.render(params)
 
-	def render_str(self, template, **params):
-		t = jinja_env.get_template(template)
-		return t.render(params)
+# webapp2 (Python 2 only, last released 2012) -> Flask
+app = Flask(__name__)
 
-	def render(self, template, **kw):
-		self.write(self.render_str(template, **kw))
+@app.route('/', methods=['GET', 'POST'])
+def encryption():
+    if request.method == 'GET':
+        return render_str('index.html')
 
-class Encryption(Handler):
-	def get(self):
-		self.render('index.html')
-
-	def post(self):
-		text = self.request.get('text')
-		new_text = ""
-		if text:
-			new_text = text.encode('rot13')
-		self.render('index.html', text=new_text)
-
-app = webapp2.WSGIApplication([('/', Encryption)], debug = True)
+    text = request.form.get('text', '')
+    new_text = ""
+    if text:
+        # Python 3 has no str.encode('rot13'); the codec lives in codecs.
+        new_text = codecs.encode(text, 'rot13')
+    return render_str('index.html', text=new_text)

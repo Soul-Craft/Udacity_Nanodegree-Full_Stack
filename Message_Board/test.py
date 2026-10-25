@@ -1,30 +1,33 @@
 '''
 Test script for the Messageboard
 
-The server should be listening on port 8000, 
+The server should be listening on port $PORT (default 3100), 
 answer a GET request with an HTML document, 
 and answer a POST request with a redirect to the main page.
 '''
 
 # Import Modules
-import requests, random, socket
+import os, requests, random, socket, sys
+
+PORT = int(os.environ.get('PORT', 3100))
+BASE = 'http://localhost:{}/'.format(PORT)
 
 def test_connect():
     '''Try connecting to the server.'''
     print("Testing connecting to the server.")
     try:
         with socket.socket() as s:
-           s.connect(("localhost", 8000))
+           s.connect(("localhost", PORT))
         print("Connection attempt succeeded.")
         return None
     except socket.error:
-        return "Server didn't answer on localhost port 8000.  Is it running?"
+        return "Server didn't answer on localhost port {}.  Is it running?".format(PORT)
 
 def test_POST_303():
     '''The server should accept a POST and return a 303 to /.'''
     print("Testing POST request, looking for redirect.")
     mesg = random.choice(["Hi there!", "Hello!", "Greetings!"])
-    uri = "http://localhost:8000/"
+    uri = BASE
     try:
         r = requests.post(uri, data = {'message': mesg}, allow_redirects=False)
     except requests.RequestException as e:
@@ -48,7 +51,7 @@ def test_POST_303():
 def test_GET():
     '''The server should accept a GET and return the form.'''
     print("Testing GET request.")
-    uri = "http://localhost:8000/"
+    uri = BASE
     try:
         r = requests.get(uri)
     except requests.RequestException as e:
@@ -72,7 +75,7 @@ def test_GET():
 def test_memory():
     '''The server should remember posts.'''
     print("Testing whether messageboard saves messages.")
-    uri = "http://localhost:8000"
+    uri = BASE
     mesg = random.choice(["Remember me!", "Don't forget.", "You know me."])
     r = requests.post(uri, data = {'message': mesg})
     if r.status_code != 200:
@@ -92,5 +95,6 @@ if __name__ == '__main__':
         if problem is not None:
             print(problem)
             break
-    if not problem:
-        print("All tests succeeded!")
+    if problem:
+        sys.exit(1)
+    print("All tests succeeded!")

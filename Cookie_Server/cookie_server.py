@@ -1,6 +1,7 @@
 # An HTTP server that remembers a user name in a HTTP cookie
 
 from http.cookies import SimpleCookie, CookieError
+import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from http import cookies
 from urllib.parse import parse_qs
@@ -74,6 +75,7 @@ class NameHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    server_address = ('', 8000)
+    # PORT wins; locally the default is 3100, the first port of soulcraft's dev block.
+    server_address = ('', int(os.environ.get('PORT', 3100)))
     httpd = HTTPServer(server_address, NameHandler)
     httpd.serve_forever()

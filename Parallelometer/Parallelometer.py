@@ -1,7 +1,6 @@
 # A demonstration that your browser opens many requests to a server.
 
-import http.server, threading, time, random
-from socketserver import ThreadingMixIn
+import http.server, os, threading, time, random
 
 '''
 HTML main page.
@@ -63,10 +62,9 @@ class Parallelometer(http.server.BaseHTTPRequestHandler):
             inflight -= 1
 
 
-class ThreadHTTPServer(ThreadingMixIn, http.server.HTTPServer):
-    pass
-
 if __name__ == '__main__':
-    address = ('', 8000)
-    httpd = ThreadHTTPServer(address, Parallelometer)
+    # PORT wins; locally the default is 3100, the first port of soulcraft's dev block.
+    address = ('', int(os.environ.get('PORT', 3100)))
+    # ThreadingHTTPServer (Python 3.7+) handles each request in its own thread.
+    httpd = http.server.ThreadingHTTPServer(address, Parallelometer)
     httpd.serve_forever()

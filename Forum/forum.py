@@ -2,10 +2,11 @@
 
 # Imports
 from forumdb import get_all_posts, add_post
-from cgi import parse_qs
+from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 from wsgiref import util
 import bleach
+import os
 
 # HTML template for the forum page
 HTML_WRAP = '''\
@@ -49,9 +50,10 @@ def View(env, resp):
     # get posts from database
     posts = get_all_posts()
     # send results
-    headers = [('Content-type', 'text/html')]
+    headers = [('Content-type', 'text/html; charset=utf-8')]
     resp('200 OK', headers)
-    return [HTML_WRAP % ''.join(POST % p for p in posts)]
+    # Python 3 WSGI bodies are bytes
+    return [(HTML_WRAP % ''.join(POST % p for p in posts)).encode()]
 
 ## Request handler for posting - inserts to database
 def Post(env, resp):
@@ -62,10 +64,10 @@ def Post(env, resp):
     '''
     # Get post content
     input = env['wsgi.input']
-    length = int(env.get('CONTENT_LENGTH', 0))
+    length = int(env.get('CONTENT_LENGTH') or 0)
     # If length is zero, post is empty - don't save it.
     if length > 0:
-        postdata = input.read(length)
+        postdata = input.read(length).decode()
         fields = parse_qs(postdata)
         content = fields['content'][0]
         # If the post is just whitespace, don't save it.
@@ -78,7 +80,7 @@ def Post(env, resp):
     headers = [('Location', '/'),
                ('Content-type', 'text/plain')]
     resp('302 REDIRECT', headers) 
-    return ['Redirecting']
+    return [b'Redirecting']
 
 ## Dispatch table - maps URL prefixes to request handlers
 DISPATCH = {'': View,
@@ -95,10 +97,12 @@ def Dispatcher(env, resp):
         status = '404 Not Found'
         headers = [('Content-type', 'text/plain')]
         resp(status, headers)    
-        return ['Not Found: ' + page]
+        return [('Not Found: ' + page).encode()]
 
 
 # Run this bad server only on localhost!
-httpd = make_server('', 8000, Dispatcher)
-print ("Serving HTTP on port 8000...")
+# PORT wins; locally the default is 3100, the first port of soulcraft's dev block.
+port = int(os.environ.get('PORT', 3100))
+httpd = make_server('', port, Dispatcher)
+print ("Serving HTTP on port {}...".format(port))
 httpd.serve_forever()

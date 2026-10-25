@@ -17,7 +17,7 @@ def SampleRecord():
 
 # Output
 sample = SampleRecord()
-pat = re.compile('My name is (\S+) (\S+) and the PIN on my card is (\S+).')
+pat = re.compile(r'My name is (\S+) (\S+) and the PIN on my card is (\S+).')
 match = pat.match(sample)
 
 if not match:

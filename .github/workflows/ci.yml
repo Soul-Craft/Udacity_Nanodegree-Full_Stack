@@ -1,0 +1,106 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  apps:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: "**/requirements*.txt"
+      - name: install every project's requirements
+        run: pip install $(git ls-files '*requirements*.txt' | sed 's/^/-r /')
+      - run: python -m compileall -q .
+
+      # Flask's test client; datastore and users calls go to the App Engine SDK's testbed stubs.
+      - name: App Engine apps
+        run: python .github/ci/app_engine_smoke.py
+
+      # Each server listens on $PORT (default 3100); its test script or curl checks it, then it stops.
+      - name: HTTP servers
+        run: |
+          serve() {
+            (cd "$1" && exec python "$2") & echo $! > /tmp/server.pid
+            for _ in $(seq 40); do nc -z localhost 3100 && return; sleep 0.25; done
+            echo "$1/$2 did not start"; return 1
+          }
+          # pkill -P also stops the child that Flask's debug reloader (API_Server) serves from.
+          stop() { pkill -P "$(cat /tmp/server.pid)" || true; kill "$(cat /tmp/server.pid)"; while nc -z localhost 3100; do sleep 0.1; done; }
+
+          serve Cookie_Server cookie_server.py;   (cd Cookie_Server && python test.py);   stop
+          serve Message_Board message_board.py;   (cd Message_Board && python test.py);   stop
+          serve Puppies puppies.py;               (cd Puppies && echo | python test.py);  stop
+          serve API_Server api_server.py
+          curl -fsS localhost:3100/readHello/ | grep -F "GET Request"
+          curl -fsS -X DELETE localhost:3100/deleteHello/ | grep -F "DELETE request"
+          stop
+          serve Parallelometer Parallelometer.py
+          curl -fsS localhost:3100/frame0 | grep -F "requests in flight"
+          stop
+
+      - name: SQLite and stdlib scripts
+        run: |
+          (cd Employees && python database_setup.py && python employees.py)
+          (cd Links && python database_setup.py && python links.py)
+          (cd Chinook && python queries.py > /dev/null)
+          (cd Udacious_Music && python sqlite3_select_orderby.py)
+          (cd Favorite_Movies && python favorite_movies.py)
+          python Score_to_Rating/score_to_rating.py
+          python Draw/snake.py
+
+  # Tournament, Bug_Management and Forum against the runner's own PostgreSQL. Logs_Analysis needs Udacity's
+  # news dump, which is not in the repository, so it is only compiled.
+  postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: start PostgreSQL
+        run: |
+          sudo systemctl start postgresql.service
+          sudo -u postgres createuser --superuser "$USER"
+      - name: Tournament tests
+        run: |
+          psql -q -d postgres -f Tournament/database_setup.sql
+          (cd Tournament && python test.py)
+      - name: Bug_Management
+        run: |
+          psql -q -d postgres -f Bug_Management/database_setup.sql
+          (cd Bug_Management && python bug_management.py)
+      - name: Forum posts and reads back a message
+        run: |
+          psql -q -d postgres -f Forum/database_setup.sql
+          (cd Forum && exec python forum.py) &
+          for _ in $(seq 40); do nc -z localhost 3100 && break; sleep 0.25; done
+          test "$(curl -sS -o /dev/null -w '%{http_code}' --data-urlencode 'content=<b>hello</b> from CI' localhost:3100/post)" = 302
+          curl -fsS localhost:3100/ | grep -F '&lt;b&gt;hello&lt;/b&gt; from CI'
+
+  # Owner, 2026-10-25: every Dependabot update merges once all other jobs pass, majors too.
+  dependabot-merge:
+    needs: [apps, postgres]
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    permissions: {contents: write, pull-requests: write}
+    steps:
+      - run: gh pr merge --squash --delete-branch "$PR"
+        env: {GH_TOKEN: "${{ github.token }}", PR: "${{ github.event.pull_request.html_url }}"}
