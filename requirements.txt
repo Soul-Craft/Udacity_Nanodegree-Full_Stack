@@ -2,7 +2,7 @@
 # requirements.txt beside their app.yaml, since App Engine installs from the deployed folder.
 bleach==6.4.0            # Forum
 Flask==3.1.3             # API_Server, Puppies
-httplib2==0.32.0         # Puppies/test.py, Restaurant_Search-API
+httplib2==0.32.1         # Puppies/test.py, Restaurant_Search-API
 pandas==3.1.0            # Chinook
 psycopg2-binary==2.9.13  # Bug_Management, Forum, Logs_Analysis, Tournament
 requests==2.34.2         # UI_Names, Cookie_Server and Message_Board tests
