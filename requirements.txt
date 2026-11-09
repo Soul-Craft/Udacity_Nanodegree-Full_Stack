@@ -3,7 +3,7 @@
 bleach==6.4.0            # Forum
 Flask==3.1.3             # API_Server, Puppies
 httplib2==0.32.1         # Puppies/test.py, Restaurant_Search-API
-pandas==3.1.0            # Chinook
+pandas==3.1.1            # Chinook
 psycopg2-binary==2.9.13  # Bug_Management, Forum, Logs_Analysis, Tournament
 requests==2.34.2         # UI_Names, Cookie_Server and Message_Board tests
-SQLAlchemy==2.1.6        # Employees, Puppies
+SQLAlchemy==2.1.8        # Employees, Puppies
